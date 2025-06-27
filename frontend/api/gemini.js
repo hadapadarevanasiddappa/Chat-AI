@@ -1,34 +1,20 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export default async function handler(req, res) {
   const { message } = req.body;
-
-  const API_KEY = process.env.GEMINI_API_KEY;
-  const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/chat-bison-001:generateMessage`;
+  const apiKey = process.env.GEMINI_API_KEY;
 
   try {
-    const response = await fetch(`${GEMINI_URL}?key=${API_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        prompt: {
-          messages: [
-            {
-              author: 'user',
-              content: message,
-            },
-          ],
-        },
-        temperature: 0.7,
-        candidateCount: 1,
-      }),
-    });
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
-    const data = await response.json();
+    const result = await model.generateContent(message);
+    const response = await result.response;
+    const text = response.text();
 
-    const reply = data?.candidates?.[0]?.content || '[❓ Gemini raw response]:\n' + JSON.stringify(data);
-    res.status(200).json({ reply });
+    res.status(200).json({ reply: text });
   } catch (error) {
-    console.error('[Gemini Error]', error);
-    res.status(500).json({ reply: '❌ Gemini API request failed.' });
+    console.error("Gemini SDK Error:", error);
+    res.status(500).json({ reply: "❌ Gemini SDK call failed." });
   }
 }
