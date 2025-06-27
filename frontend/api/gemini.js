@@ -15,12 +15,16 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    console.log('[Gemini API Raw Response]', JSON.stringify(data, null, 2));
+    console.log('[Gemini Full Response]', data); // for local testing
 
-    const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || '⚠️ Gemini returned an empty reply.';
+    // Return full raw response if no usable reply
+    const reply =
+      data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+      `[❓ Gemini raw response]:\n${JSON.stringify(data, null, 2)}`;
+
     res.status(200).json({ reply });
   } catch (error) {
-    console.error('[Gemini API Error]', error);
-    res.status(500).json({ reply: '❌ Error connecting to Gemini API.' });
+    console.error('[Gemini Error]', error);
+    res.status(500).json({ reply: '❌ Gemini API request failed.' });
   }
 }
